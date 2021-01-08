@@ -3,15 +3,6 @@
     * [请求和响应报文](#请求和响应报文)
     * [URL](#url)
 * [二、HTTP 方法](#二http-方法)
-    * [GET](#get)
-    * [HEAD](#head)
-    * [POST](#post)
-    * [PUT](#put)
-    * [PATCH](#patch)
-    * [DELETE](#delete)
-    * [OPTIONS](#options)
-    * [CONNECT](#connect)
-    * [TRACE](#trace)
 * [三、HTTP 状态码](#三http-状态码)
     * [1XX 信息](#1xx-信息)
     * [2XX 成功](#2xx-成功)
@@ -52,7 +43,6 @@
     * [幂等性](#幂等性)
     * [可缓存](#可缓存)
     * [XMLHttpRequest](#xmlhttprequest)
-* [参考资料](#参考资料)
 <!-- GFM-TOC -->
 
 
@@ -141,21 +131,17 @@ http 使用 URL（ **U** niform **R**esource **L**ocator，统一资源定位符
 
 当前网络请求中，绝大部分使用的是 GET 方法。
 
-## HEAD
-
-> 获取报文首部
-
-和 GET 方法类似，但是不返回报文实体主体部分。
-
-主要用于确认 URL 的有效性以及资源更新的日期时间等。
-
 ## POST
 
 > 传输实体主体
 
 POST 主要用来传输数据，而 GET 主要用来获取资源。
 
-更多 POST 与 GET 的比较请见第九章。
+## HEAD
+
+> 获取报文首部
+
+和 GET 方法类似，但是不返回报文实体主体部分，主要用于确认 URL 的有效性以及资源更新的日期时间等。
 
 ## PUT
 
@@ -163,40 +149,17 @@ POST 主要用来传输数据，而 GET 主要用来获取资源。
 
 由于自身不带验证机制，任何人都可以上传文件，因此存在安全性问题，一般不使用该方法。
 
-```html
-PUT /new.html HTTP/1.1
-Host: example.com
-Content-type: text/html
-Content-length: 16
-
-<p>New File</p>
-```
-
 ## PATCH
 
 > 对资源进行部分修改
 
 PUT 也可以用于修改资源，但是只能完全替代原始资源，PATCH 允许部分修改。
 
-```html
-PATCH /file.txt HTTP/1.1
-Host: www.example.com
-Content-Type: application/example
-If-Match: "e0023aa4e"
-Content-Length: 100
-
-[description of changes]
-```
-
 ## DELETE
 
 > 删除文件
 
 与 PUT 功能相反，并且同样不带验证机制。
-
-```html
-DELETE /file.html HTTP/1.1
-```
 
 ## OPTIONS
 
@@ -212,12 +175,6 @@ DELETE /file.html HTTP/1.1
 
 使用 SSL（Secure Sockets Layer，安全套接层）和 TLS（Transport Layer Security，传输层安全）协议把通信内容加密后经网络隧道传输。
 
-```html
-CONNECT www.example.com:443 HTTP/1.1
-```
-
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/dc00f70e-c5c8-4d20-baf1-2d70014a97e3.jpg" width=""/> </div><br>
-
 ## TRACE
 
 > 追踪路径
@@ -228,7 +185,37 @@ CONNECT www.example.com:443 HTTP/1.1
 
 通常不会使用 TRACE，并且它容易受到 XST 攻击（Cross-Site Tracing，跨站追踪）。
 
-- [rfc2616：9 Method Definitions](https://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html)
+## GET 和 POST 的区别
+
+GET 和 POST 方法没有实质区别，两种方法本质上是 TCP 连接，只是报文格式不同。
+GET 把请求的数据会附在 URL 之后（放在请求行中）, POST 是将请求信息放置在请求数据中.
+
+### 可见性 
+
+GET 数据在URL中对所有人可见。
+POST 数据不会显示在URL中。
+
+### 安全性
+
+GET GET请求没有body，只有url，请求数据放在url的querystring中，安全性较差。
+POST 安全，POST请求的数据在body中。
+实际上都不安全，因为HTTP本身是明文协议。每个HTTP请求和返回的每个byte都会在网络上明文传播，不管是url，header还是body。需要从客户端到服务器的端端https加密。
+
+### 幂等性
+
+GET 同样的请求被执行一次与连续执行多次的效果是一样的，服务器的状态也是一样的，无副作用。 
+POST 会产生多次记录，在商品下单类当中不可使用
+
+### 数据长度
+
+GET 受限制，最长2KB
+POST 无限制
+
+### 缓存
+
+GET 能被缓存 ； POST 不能被缓存
+
+### 响应的数据包
 
 # 三、HTTP 状态码
 
@@ -244,11 +231,11 @@ CONNECT www.example.com:443 HTTP/1.1
 
 ## 1XX 信息
 
--   **100 Continue**  ：表明到目前为止都很正常，客户端可以继续发送请求或者忽略这个响应。
+-   **100 Continue**  ：表明到目前为止都很正常，客户端可以继续发送请求主体或者忽略这个响应。
 
 ## 2XX 成功
 
--   **200 OK**  
+-   **200 OK**  ： 请求已成功，请求所希望的响应头或数据体将随此响应返回。
 
 -   **204 No Content**  ：请求已经成功处理，但是返回的响应报文不包含实体的主体部分。一般在只需要从客户端往服务器发送信息，而不需要返回数据时使用。
 
@@ -256,9 +243,9 @@ CONNECT www.example.com:443 HTTP/1.1
 
 ## 3XX 重定向
 
--   **301 Moved Permanently**  ：永久性重定向
+-   **301 Moved Permanently**  ：永久性重定向。
 
--   **302 Found**  ：临时性重定向
+-   **302 Found**  ：临时性重定向。
 
 -   **303 See Other**  ：和 302 有着相同的功能，但是 303 明确要求客户端应该采用 GET 方法获取资源。
 
@@ -274,21 +261,21 @@ CONNECT www.example.com:443 HTTP/1.1
 
 -   **401 Unauthorized**  ：该状态码表示发送的请求需要有认证信息（BASIC 认证、DIGEST 认证）。如果之前已进行过一次请求，则表示用户认证失败。
 
--   **403 Forbidden**  ：请求被拒绝。
+-   **403 Forbidden**  ：请求被拒绝，与401响应不同的是，身份验证并不能提供任何帮助，而且这个请求也不应该被重复提交。
 
--   **404 Not Found**  
+-   **404 Not Found**  ： 请求失败，请求所希望得到的资源未被在服务器上发现，但允许用户的后续请求。被广泛应用于当服务器不想揭示到底为何请求被拒绝或者没有其他适合的响应可用的情况下。
 
 ## 5XX 服务器错误
 
 -   **500 Internal Server Error**  ：服务器正在执行请求时发生错误。
+
+-   **502 Bad Gateway**  ：作为网关或者代理工作的服务器尝试执行请求时，从上游服务器接收到无效的响应。
 
 -   **503 Service Unavailable**  ：服务器暂时处于超负载或正在进行停机维护，现在无法处理请求。
 
 # 四、HTTP 首部
 
 有 4 种类型的首部字段：通用首部字段、请求首部字段、响应首部字段和实体首部字段。
-
-各种首部字段及其含义如下（不需要全记，仅供查阅）：
 
 ## 通用首部字段
 
@@ -361,8 +348,6 @@ CONNECT www.example.com:443 HTTP/1.1
 
 ## 连接管理
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/HTTP1_x_Connections.png" width="800"/> </div><br>
-
 ### 1. 短连接与长连接
 
 当浏览器访问一个包含多张图片的 HTML 页面时，除了请求访问的 HTML 页面资源，还会请求图片资源。如果每进行一次 HTTP 通信就要新建一个 TCP 连接，那么开销会很大。
@@ -377,107 +362,6 @@ CONNECT www.example.com:443 HTTP/1.1
 默认情况下，HTTP 请求是按顺序发出的，下一个请求只有在当前请求收到响应之后才会被发出。由于受到网络延迟和带宽的限制，在下一个请求被发送到服务器之前，可能需要等待很长时间。
 
 流水线是在同一条长连接上连续发出请求，而不用等待响应返回，这样可以减少延迟。
-
-## Cookie
-
-HTTP 协议是无状态的，主要是为了让 HTTP 协议尽可能简单，使得它能够处理大量事务。HTTP/1.1 引入 Cookie 来保存状态信息。
-
-Cookie 是服务器发送到用户浏览器并保存在本地的一小块数据，它会在浏览器之后向同一服务器再次发起请求时被携带上，用于告知服务端两个请求是否来自同一浏览器。由于之后每次请求都会需要携带 Cookie 数据，因此会带来额外的性能开销（尤其是在移动环境下）。
-
-Cookie 曾一度用于客户端数据的存储，因为当时并没有其它合适的存储办法而作为唯一的存储手段，但现在随着现代浏览器开始支持各种各样的存储方式，Cookie 渐渐被淘汰。新的浏览器 API 已经允许开发者直接将数据存储到本地，如使用 Web storage API（本地存储和会话存储）或 IndexedDB。
-
-### 1. 用途
-
-- 会话状态管理（如用户登录状态、购物车、游戏分数或其它需要记录的信息）
-- 个性化设置（如用户自定义设置、主题等）
-- 浏览器行为跟踪（如跟踪分析用户行为等）
-
-### 2. 创建过程
-
-服务器发送的响应报文包含 Set-Cookie 首部字段，客户端得到响应报文后把 Cookie 内容保存到浏览器中。
-
-```html
-HTTP/1.0 200 OK
-Content-type: text/html
-Set-Cookie: yummy_cookie=choco
-Set-Cookie: tasty_cookie=strawberry
-
-[page content]
-```
-
-客户端之后对同一个服务器发送请求时，会从浏览器中取出 Cookie 信息并通过 Cookie 请求首部字段发送给服务器。
-
-```html
-GET /sample_page.html HTTP/1.1
-Host: www.example.org
-Cookie: yummy_cookie=choco; tasty_cookie=strawberry
-```
-
-### 3. 分类
-
-- 会话期 Cookie：浏览器关闭之后它会被自动删除，也就是说它仅在会话期内有效。
-- 持久性 Cookie：指定过期时间（Expires）或有效期（max-age）之后就成为了持久性的 Cookie。
-
-```html
-Set-Cookie: id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT;
-```
-
-### 4. 作用域
-
-Domain 标识指定了哪些主机可以接受 Cookie。如果不指定，默认为当前文档的主机（不包含子域名）。如果指定了 Domain，则一般包含子域名。例如，如果设置 Domain=mozilla.org，则 Cookie 也包含在子域名中（如 developer.mozilla.org）。
-
-Path 标识指定了主机下的哪些路径可以接受 Cookie（该 URL 路径必须存在于请求 URL 中）。以字符 %x2F ("/") 作为路径分隔符，子路径也会被匹配。例如，设置 Path=/docs，则以下地址都会匹配：
-
-- /docs
-- /docs/Web/
-- /docs/Web/HTTP
-
-### 5. JavaScript
-
-浏览器通过 `document.cookie` 属性可创建新的 Cookie，也可通过该属性访问非 HttpOnly 标记的 Cookie。
-
-```html
-document.cookie = "yummy_cookie=choco";
-document.cookie = "tasty_cookie=strawberry";
-console.log(document.cookie);
-```
-
-### 6. HttpOnly
-
-标记为 HttpOnly 的 Cookie 不能被 JavaScript 脚本调用。跨站脚本攻击 (XSS) 常常使用 JavaScript 的 `document.cookie` API 窃取用户的 Cookie 信息，因此使用 HttpOnly 标记可以在一定程度上避免 XSS 攻击。
-
-```html
-Set-Cookie: id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Secure; HttpOnly
-```
-
-### 7. Secure
-
-标记为 Secure 的 Cookie 只能通过被 HTTPS 协议加密过的请求发送给服务端。但即便设置了 Secure 标记，敏感信息也不应该通过 Cookie 传输，因为 Cookie 有其固有的不安全性，Secure 标记也无法提供确实的安全保障。
-
-### 8. Session
-
-除了可以将用户信息通过 Cookie 存储在用户浏览器中，也可以利用 Session 存储在服务器端，存储在服务器端的信息更加安全。
-
-Session 可以存储在服务器上的文件、数据库或者内存中。也可以将 Session 存储在 Redis 这种内存型数据库中，效率会更高。
-
-使用 Session 维护用户登录状态的过程如下：
-
-- 用户进行登录时，用户提交包含用户名和密码的表单，放入 HTTP 请求报文中；
-- 服务器验证该用户名和密码，如果正确则把用户信息存储到 Redis 中，它在 Redis 中的 Key 称为 Session ID；
-- 服务器返回的响应报文的 Set-Cookie 首部字段包含了这个 Session ID，客户端收到响应报文之后将该 Cookie 值存入浏览器中；
-- 客户端之后对同一个服务器进行请求时会包含该 Cookie 值，服务器收到之后提取出 Session ID，从 Redis 中取出用户信息，继续之前的业务操作。
-
-应该注意 Session ID 的安全性问题，不能让它被恶意攻击者轻易获取，那么就不能产生一个容易被猜到的 Session ID 值。此外，还需要经常重新生成 Session ID。在对安全性要求极高的场景下，例如转账等操作，除了使用 Session 管理用户状态之外，还需要对用户进行重新验证，比如重新输入密码，或者使用短信验证码等方式。
-
-### 9. 浏览器禁用 Cookie
-
-此时无法使用 Cookie 来保存用户信息，只能使用 Session。除此之外，不能再将 Session ID 存放到 Cookie 中，而是使用 URL 重写技术，将 Session ID 作为 URL 的参数进行传递。
-
-### 10. Cookie 与 Session 选择
-
-- Cookie 只能存储 ASCII 码字符串，而 Session 则可以存储任何类型的数据，因此在考虑数据复杂性时首选 Session；
-- Cookie 存储在浏览器中，容易被恶意查看。如果非要将一些隐私数据存在 Cookie 中，可以将 Cookie 值进行加密，然后在服务器进行解密；
-- 对于大型网站，如果用户所有的信息都存储在 Session 中，那么开销是非常大的，因此不建议将所有的用户信息都存储到 Session 中。
 
 ## 缓存
 
@@ -704,34 +588,34 @@ HTTP/1.1 使用虚拟主机技术，使得一台服务器拥有多个域名，�
 
 使用 SSL 等加密手段，在客户端和服务器之间建立一条安全的通信线路。
 
+一次 HTTP 的请求过程中发生了什么？
+
 # 六、HTTPS
 
-HTTP 有以下安全性问题：
+## 为什么需要 HTTPS，HTTP 有以下安全性问题：
 
 - 使用明文进行通信，内容可能会被窃听；
 - 不验证通信方的身份，通信方的身份有可能遭遇伪装；
 - 无法证明报文的完整性，报文有可能遭篡改。
 
-HTTPS 并不是新协议，而是让 HTTP 先和 SSL（Secure Sockets Layer）通信，再由 SSL 和 TCP 通信，也就是说 HTTPS 使用了隧道进行通信。
+HTTPS 并不是新协议，是让 HTTP 先和 SSL（Secure Sockets Layer）通信，再由 SSL 和 TCP 通信，也就是说 HTTPS 使用了隧道进行通信。
+
+在传输层和应用层之间加了一层SSL/TLS
 
 通过使用 SSL，HTTPS 具有了加密（防窃听）、认证（防伪装）和完整性保护（防篡改）。
-
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/ssl-offloading.jpg" width="700"/> </div><br>
 
 ## 加密
 
 ### 1. 对称密钥加密
 
-对称密钥加密（Symmetric-Key Encryption），加密和解密使用同一密钥。
+对称密钥加密（Symmetric-Key Encryption），加密和解密使用同一密钥，典型对称加密算法：DES、AES。
 
 - 优点：运算速度快；
 - 缺点：无法安全地将密钥传输给通信方。
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/7fffa4b8-b36d-471f-ad0c-a88ee763bb76.png" width="600"/> </div><br>
-
 ### 2.非对称密钥加密
 
-非对称密钥加密，又称公开密钥加密（Public-Key Encryption），加密和解密使用不同的密钥。
+非对称密钥加密，又称公开密钥加密（Public-Key Encryption），加密和解密使用不同的密钥，典型的非对称加密算法有：RSA、DSA。
 
 公开密钥所有人都可以获得，通信发送方获得接收方的公开密钥之后，就可以使用公开密钥进行加密，接收方收到通信内容后使用私有密钥解密。
 
@@ -740,18 +624,7 @@ HTTPS 并不是新协议，而是让 HTTP 先和 SSL（Secure Sockets Layer）�
 - 优点：可以更安全地将公开密钥传输给通信发送方；
 - 缺点：运算速度慢。
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/39ccb299-ee99-4dd1-b8b4-2f9ec9495cb4.png" width="600"/> </div><br>
-
-### 3. HTTPS 采用的加密方式
-
-上面提到对称密钥加密方式的传输效率更高，但是无法安全地将密钥 Secret Key 传输给通信方。而非对称密钥加密方式可以保证传输的安全性，因此我们可以利用非对称密钥加密方式将 Secret Key  传输给通信方。HTTPS 采用混合的加密机制，正是利用了上面提到的方案：
-
-- 使用非对称密钥加密方式，传输对称密钥加密方式所需要的 Secret Key，从而保证安全性;
-- 获取到 Secret Key 后，再使用对称密钥加密方式进行通信，从而保证效率。（下图中的 Session Key 就是 Secret Key）
-
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/How-HTTPS-Works.png" width="600"/> </div><br>
-
-## 认证
+## 数字证书
 
 通过使用   **证书**   来对通信方进行认证。
 
@@ -761,184 +634,106 @@ HTTPS 并不是新协议，而是让 HTTP 先和 SSL（Secure Sockets Layer）�
 
 进行 HTTPS 通信时，服务器会把证书发送给客户端。客户端取得其中的公开密钥之后，先使用数字签名进行验证，如果验证通过，就可以开始通信了。
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/2017-06-11-ca.png" width=""/> </div><br>
+## 数字签名
 
-## 完整性保护
+我们把证书内容生成一份“签名”，比对证书内容和签名是否一致就能察觉是否被篡改。这种技术就叫数字签名：
 
-SSL 提供报文摘要功能来进行完整性保护。
+## HTTPS链接建立的过程（SSL/TLS 握手过程）：
+### 采用混合加密的模式
 
-HTTP 也提供了 MD5 报文摘要功能，但不是安全的。例如报文内容被篡改之后，同时重新计算 MD5 的值，通信接收方是无法意识到发生了篡改。
-
-HTTPS 的报文摘要功能之所以安全，是因为它结合了加密和认证这两个操作。试想一下，加密之后的报文，遭到篡改之后，也很难重新计算报文摘要，因为无法轻易获取明文。
+- 首先客户端先给服务器发送一个请求，包括协议版本号、一个客户端生成的随机数（C1），以及客户端支持的加密方法。
+- 服务端确认双方使用的加密方法，并给出数字证书、以及一个服务器生成的随机数（S1）。
+- 客户端确认数字证书有效，然后生成一个新的随机数（C2），并使用数字证书中的公钥，加密这个随机数，发给服务端。
+- 服务器端使用私钥进行解密并使用对称密钥加密确认信息发送给客户端
+- 客户端和服务端根据约定的加密方法，使用前面的三个随机数，生成"对话密钥"（session key），用来加密接下来的整个对话过程。
 
 ## HTTPS 的缺点
 
 - 因为需要进行加密解密等过程，因此速度会更慢；
 - 需要支付证书授权的高额费用。
 
-# 七、HTTP/2.0
+## HTTP 和 HTTPS 的区别？
 
-## HTTP/1.x 缺陷
+- 端口 ：HTTP的URL由“http://”起始且默认使用端口80，而HTTPS的URL由“https://”起始且默认使用端口443。
+- 安全性和资源消耗： HTTP协议运行在TCP之上，所有传输的内容都是明文，客户端和服务器端都无法验证对方的身份。HTTPS是运行在SSL/TLS之上的HTTP协议，SSL/TLS 运行在TCP之上。
+  所有传输的内容都经过加密，加密采用对称加密，但对称加密的密钥用服务器方的证书进行了非对称加密。所以说，HTTP 安全性没有 HTTPS高，但是 HTTPS 比HTTP耗费更多服务器资源。
 
-HTTP/1.x 实现简单是以牺牲性能为代价的：
+# 七、HTTP/1.0、1.1、2.0之间的区别
 
-- 客户端需要使用多个连接才能实现并发和缩短延迟；
-- 不会压缩请求和响应首部，从而导致不必要的网络流量；
-- 不支持有效的资源优先级，致使底层 TCP 连接的利用率低下。
+​ HTTP1.0：默认使用 Connection:cloose，浏览器每次请求都需要与服务器建立一个TCP连接，服务器处理完成后立即断开TCP连接（无连接），服务器不跟踪每个客户端也不记录过去的请求（无状态）。
 
-## 二进制分帧层
+​ HTTP1.1：默认使用 Connection:keep-alive（长连接），避免了连接建立和释放的开销；通过Content-Length字段来判断当前请求的数据是否已经全部接受。不允许同时存在两个并行的响应。
 
-HTTP/2.0 将报文分成 HEADERS 帧和 DATA 帧，它们都是二进制格式的。
+​ HTTP2.0：引入二进制数据帧和流的概念，其中帧对数据进行顺序标识；因为有了序列，服务器可以并行的传输数据。
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/86e6a91d-a285-447a-9345-c5484b8d0c47.png" width="400"/> </div><br>
+## http1.0和http1.1的主要区别
+​ 1、缓存处理：1.1添加更多的缓存控制策略（如：Entity tag，If-Match）
+​ 2、网络连接的优化：1.1支持断点续传
+​ 3、错误状态码的增多：1.1新增了24个错误状态响应码，丰富的错误码更加明确各个状态
+​ 4、Host头处理：支持Host头域，不在以IP为请求方标志
+​ 5、长连接：减少了建立和关闭连接的消耗和延迟。
 
-在通信过程中，只会有一个 TCP 连接存在，它承载了任意数量的双向数据流（Stream）。
+## http1.1和http2.0的主要区别
+​ 1、新的传输格式：2.0使用二进制格式，1.0依然使用基于文本格式
+​ 2、多路复用：连接共享，不同的request可以使用同一个连接传输（最后根据每个request上的id号组合成 正常的请求）
+​ 3、header压缩：由于1.X中header带有大量的信息，并且得重复传输，2.0使用encoder来减少需要传输的 hearder大小
+​ 4、服务端推送：同google的SPDUY（1.0的一种升级）一样
 
-- 一个数据流（Stream）都有一个唯一标识符和可选的优先级信息，用于承载双向信息。
-- 消息（Message）是与逻辑请求或响应对应的完整的一系列帧。
-- 帧（Frame）是最小的通信单位，来自不同数据流的帧可以交错发送，然后再根据每个帧头的数据流标识符重新组装。
+# 九、Cookie, Session, Token
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/af198da1-2480-4043-b07f-a3b91a88b815.png" width="600"/> </div><br>
+## Cookie
 
-## 服务端推送
+Cookie 一般用来保存用户信息
+- 是服务器发送到用户浏览器并保存在本地的一小块数据，我们在 Cookie 中保存已经登录过得用户信息，下次访问网站的时候客户端的 request header 中可以自动带上
+- 一般的网站都会有保持登录不需要重新登录，可以存放了一个 Token 在 Cookie 中，下次登录的时候只需要根据 Token 值来查找用户即可(为了安全考虑，重新登录一般要将 Token 重写)
+- 登录一次网站后访问网站其他页面不需要重新登录。
 
-HTTP/2.0 在客户端请求一个资源时，会把相关的资源一起发送给客户端，客户端就不需要再次发起请求了。例如客户端请求 page.html 页面，服务端就把 script.js 和 style.css 等与之相关的资源一起发给客户端。
+## Session
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/e3f1657c-80fc-4dfa-9643-bf51abd201c6.png" width="800"/> </div><br>
+Session 的主要作用就是通过服务端记录用户的状态。 
+- 典型的场景是购物车，当你要添加商品到购物车的时候，系统不知道是哪个用户操作的，因为 HTTP 协议是无状态的。服务端给特定的用户创建特定的 Session 之后就可以标识这个用户并且跟踪这个用户了。
 
-## 首部压缩
+### 禁用Cookie
+1. 每次请求中都携带一个 SessionID 的参数，也可以 Post 的方式提交，也可以在请求的地址后面拼接xxx?SessionID=123456...。
+2. Token 机制。Token 机制多用于 App 客户端和服务器交互的模式，也可以用于 Web 端做用户状态管理。
 
-HTTP/1.1 的首部带有大量信息，而且每次都要重复发送。
+### Cookie/Session 使用流程
 
-HTTP/2.0 要求客户端和服务器同时维护和更新一个包含之前见过的首部字段表，从而避免了重复传输。
+- 用户第一次请求服务器的时候，服务器根据用户提交的相关信息，创建创建对应的 Session ，请求返回时将此 Session 的唯一标识信息 SessionID 返回给浏览器，
+浏览器接收到服务器返回的 SessionID 信息后，会将此信息存入到 Cookie 中，同时 Cookie 记录此 SessionID 属于哪个域名。
 
-不仅如此，HTTP/2.0 也使用 Huffman 编码对首部字段进行压缩。
+- 当用户第二次访问服务器的时候，请求会自动判断此域名下是否存在 Cookie 信息，如果存在自动将 Cookie 信息也发送给服务端，服务端会从 Cookie 中获取 SessionID，
+再根据 SessionID 查找对应的 Session 信息，如果没有找到说明用户没有登录或者登录失效，如果找到 Session 证明用户已经登录可执行后面操作。
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/_u4E0B_u8F7D.png" width="600"/> </div><br>
+## Token
+Token 的意思是“令牌”，是服务端生成的一串字符串，作为客户端进行请求的一个标识。Token 机制和 Cookie 和 Session 的使用机制比较类似。
+token 也称作令牌，由 id + time + sign [+固定参数]
+token 的认证方式类似于临时的证书签名, 并且是一种服务端无状态的认证方式, 非常适合于 REST API 的场景. 所谓无状态就是服务端并不会保存身份认证相关的数据。
 
-# 八、HTTP/1.1 新特性
+### Token 使用流程
+- 用户登录，成功后服务器返回Token给客户端。
+- 客户端收到数据后保存在客户端
+- 客户端再次访问服务器，将token放入headers中
+- 服务器端采用filter过滤器校验。校验成功则返回请求数据，校验失败则返回错误码
 
-详细内容请见上文
+## 为什么要有 Cookie/Session?
 
-- 默认是长连接
-- 支持流水线
-- 支持同时打开多个 TCP 连接
-- 支持虚拟主机
-- 新增状态码 100
-- 支持分块传输编码
-- 新增缓存处理指令 max-age
+在客户端浏览器向服务器发送请求，服务器做出响应之后,二者便会断开连接(一次会话结束)。那么下次用户再来请求服务器，服务器没有任何办法去识别此用户是谁。
+有了 Cookie 可以向服务器证明用户身份了，用户的详细信息通过 Cookie 存在于客户端的，将用户详细信息通过网络发送到客户端保存是极不安全的。且cookie大小不能超过4k，不能支持中文。
+这就限制cookie不能满足存储用户信息的需求。这就需要一种机制在服务器端的某个域中存储一些数据，这个域就是 Session。
 
-# 九、GET 和 POST 比较
+总而言之，cookie/session的出现就是为了解决http协议无状态的弊端，为了让客户端和服务端建立长久联系而出现的。
 
-## 作用
+## Cookie 和 Session 的区别
 
-GET 用于获取资源，而 POST 用于传输实体主体。
+ Cookie 和 Session都是用来跟踪浏览器用户身份的会话方式，但两者有所区别：
+- Cookie 数据保存在客户端(浏览器端)，Session 数据保存在服务器端。
+- Cookie不是很安全，别人可以分析存放在本地的COOKIE并进行欺骗，考虑到安全应当使用session。
+- Cookie ⼀般⽤来保存⽤户信息，Session 的主要作⽤就是通过服务端记录⽤户的状态
+- 有效期不同，Cookie 可设置为长时间保持，比如我们经常使用的默认登录功能，Session 一般失效时间较短，客户端关闭或者 Session 超时都会失效。
+- 存取方式的不同，Cookie 只能保存 ASCII，Session 可以存任意数据类型，一般情况下我们可以在 Session 中保持一些常用变量信息，比如说 UserId 等。
+- 存储大小不同， 单个 Cookie 保存的数据不能超过 4K，Session 可存储数据远高于 Cookie。
 
-## 参数
-
-GET 和 POST 的请求都能使用额外的参数，但是 GET 的参数是以查询字符串出现在 URL 中，而 POST 的参数存储在实体主体中。不能因为 POST 参数存储在实体主体中就认为它的安全性更高，因为照样可以通过一些抓包工具（Fiddler）查看。
-
-因为 URL 只支持 ASCII 码，因此 GET 的参数中如果存在中文等字符就需要先进行编码。例如 `中文` 会转换为 `%E4%B8%AD%E6%96%87`，而空格会转换为 `%20`。POST 参数支持标准字符集。
-
-```
-GET /test/demo_form.asp?name1=value1&name2=value2 HTTP/1.1
-```
-
-```
-POST /test/demo_form.asp HTTP/1.1
-Host: w3schools.com
-name1=value1&name2=value2
-```
-
-## 安全
-
-安全的 HTTP 方法不会改变服务器状态，也就是说它只是可读的。
-
-GET 方法是安全的，而 POST 却不是，因为 POST 的目的是传送实体主体内容，这个内容可能是用户上传的表单数据，上传成功之后，服务器可能把这个数据存储到数据库中，因此状态也就发生了改变。
-
-安全的方法除了 GET 之外还有：HEAD、OPTIONS。
-
-不安全的方法除了 POST 之外还有 PUT、DELETE。
-
-## 幂等性
-
-幂等的 HTTP 方法，同样的请求被执行一次与连续执行多次的效果是一样的，服务器的状态也是一样的。换句话说就是，幂等方法不应该具有副作用（统计用途除外）。
-
-所有的安全方法也都是幂等的。
-
-在正确实现的条件下，GET，HEAD，PUT 和 DELETE 等方法都是幂等的，而 POST 方法不是。
-
-GET /pageX HTTP/1.1 是幂等的，连续调用多次，客户端接收到的结果都是一样的：
-
-```
-GET /pageX HTTP/1.1
-GET /pageX HTTP/1.1
-GET /pageX HTTP/1.1
-GET /pageX HTTP/1.1
-```
-
-POST /add_row HTTP/1.1 不是幂等的，如果调用多次，就会增加多行记录：
-
-```
-POST /add_row HTTP/1.1   -> Adds a 1nd row
-POST /add_row HTTP/1.1   -> Adds a 2nd row
-POST /add_row HTTP/1.1   -> Adds a 3rd row
-```
-
-DELETE /idX/delete HTTP/1.1 是幂等的，即使不同的请求接收到的状态码不一样：
-
-```
-DELETE /idX/delete HTTP/1.1   -> Returns 200 if idX exists
-DELETE /idX/delete HTTP/1.1   -> Returns 404 as it just got deleted
-DELETE /idX/delete HTTP/1.1   -> Returns 404
-```
-
-## 可缓存
-
-如果要对响应进行缓存，需要满足以下条件：
-
-- 请求报文的 HTTP 方法本身是可缓存的，包括 GET 和 HEAD，但是 PUT 和 DELETE 不可缓存，POST 在多数情况下不可缓存的。
-- 响应报文的状态码是可缓存的，包括：200, 203, 204, 206, 300, 301, 404, 405, 410, 414, and 501。
-- 响应报文的 Cache-Control 首部字段没有指定不进行缓存。
-
-## XMLHttpRequest
-
-为了阐述 POST 和 GET 的另一个区别，需要先了解 XMLHttpRequest：
-
-> XMLHttpRequest 是一个 API，它为客户端提供了在客户端和服务器之间传输数据的功能。它提供了一个通过 URL 来获取数据的简单方式，并且不会使整个页面刷新。这使得网页只更新一部分页面而不会打扰到用户。XMLHttpRequest 在 AJAX 中被大量使用。
-
-- 在使用 XMLHttpRequest 的 POST 方法时，浏览器会先发送 Header 再发送 Data。但并不是所有浏览器会这么做，例如火狐就不会。
-- 而 GET 方法 Header 和 Data 会一起发送。
-
-# 参考资料
-
-- 上野宣. 图解 HTTP[M]. 人民邮电出版社, 2014.
-- [MDN : HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP)
-- [HTTP/2 简介](https://developers.google.com/web/fundamentals/performance/http2/?hl=zh-cn)
-- [htmlspecialchars](http://php.net/manual/zh/function.htmlspecialchars.php)
-- [Difference between file URI and URL in java](http://java2db.com/java-io/how-to-get-and-the-difference-between-file-uri-and-url-in-java)
-- [How to Fix SQL Injection Using Java PreparedStatement & CallableStatement](https://software-security.sans.org/developer-how-to/fix-sql-injection-in-java-using-prepared-callable-statement)
-- [浅谈 HTTP 中 Get 与 Post 的区别](https://www.cnblogs.com/hyddd/archive/2009/03/31/1426026.html)
-- [Are http:// and www really necessary?](https://www.webdancers.com/are-http-and-www-necesary/)
-- [HTTP (HyperText Transfer Protocol)](https://www.ntu.edu.sg/home/ehchua/programming/webprogramming/HTTP_Basics.html)
-- [Web-VPN: Secure Proxies with SPDY & Chrome](https://www.igvita.com/2011/12/01/web-vpn-secure-proxies-with-spdy-chrome/)
-- [File:HTTP persistent connection.svg](http://en.wikipedia.org/wiki/File:HTTP_persistent_connection.svg)
-- [Proxy server](https://en.wikipedia.org/wiki/Proxy_server)
-- [What Is This HTTPS/SSL Thing And Why Should You Care?](https://www.x-cart.com/blog/what-is-https-and-ssl.html)
-- [What is SSL Offloading?](https://securebox.comodo.com/ssl-sniffing/ssl-offloading/)
-- [Sun Directory Server Enterprise Edition 7.0 Reference - Key Encryption](https://docs.oracle.com/cd/E19424-01/820-4811/6ng8i26bn/index.html)
-- [An Introduction to Mutual SSL Authentication](https://www.codeproject.com/Articles/326574/An-Introduction-to-Mutual-SSL-Authentication)
-- [The Difference Between URLs and URIs](https://danielmiessler.com/study/url-uri/)
-- [Cookie 与 Session 的区别](https://juejin.im/entry/5766c29d6be3ff006a31b84e#comment)
-- [COOKIE 和 SESSION 有什么区别](https://www.zhihu.com/question/19786827)
-- [Cookie/Session 的机制与安全](https://harttle.land/2015/08/10/cookie-session.html)
-- [HTTPS 证书原理](https://shijianan.com/2017/06/11/https/)
-- [What is the difference between a URI, a URL and a URN?](https://stackoverflow.com/questions/176264/what-is-the-difference-between-a-uri-a-url-and-a-urn)
-- [XMLHttpRequest](https://developer.mozilla.org/zh-CN/docs/Web/API/XMLHttpRequest)
-- [XMLHttpRequest (XHR) Uses Multiple Packets for HTTP POST?](https://blog.josephscott.org/2009/08/27/xmlhttprequest-xhr-uses-multiple-packets-for-http-post/)
-- [Symmetric vs. Asymmetric Encryption – What are differences?](https://www.ssl2buy.com/wiki/symmetric-vs-asymmetric-encryption-what-are-differences)
-- [Web 性能优化与 HTTP/2](https://www.kancloud.cn/digest/web-performance-http2)
-- [HTTP/2 简介](https://developers.google.com/web/fundamentals/performance/http2/?hl=zh-cn)
 
 
 
